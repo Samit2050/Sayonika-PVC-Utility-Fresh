@@ -1,3 +1,4 @@
+
 {
   "name": "sayonika-pvc-utility",
   "productName": "Sayonika PVC Utility",
@@ -46,8 +47,7 @@
     "esbuild": "^0.25.0",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
-    "typescript": "~5.8.2",
-    "vite": "^6.2.3"
+    "typescript": "~5.8.2"
   },
   "build": {
     "appId": "com.sayonika.pvcutility",
@@ -65,7 +65,7 @@
       {
         "provider": "github",
         "owner": "Samit2050",
-        "repo": "AI-CROP",
+        "repo": "Sayonika-PVC-Utility-Fresh",
         "releaseType": "release"
       }
     ],
