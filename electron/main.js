@@ -1,3 +1,4 @@
+
 import {
   app,
   BrowserWindow,
@@ -8,455 +9,302 @@ import {
 
 import updaterPackage from 'electron-updater';
 
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-/*
-|--------------------------------------------------------------------------
-| Electron Updater
-|--------------------------------------------------------------------------
-| electron-updater is loaded through its CommonJS default export.
-*/
-
 const { autoUpdater } = updaterPackage;
 
-/*
-|--------------------------------------------------------------------------
-| Paths
-|--------------------------------------------------------------------------
-*/
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-/*
-|--------------------------------------------------------------------------
-| Global State
-|--------------------------------------------------------------------------
-*/
+const UPDATE_CONFIG_URL =
+  'https://raw.githubusercontent.com/Samit2050/Sayonika-PVC-Utility-Fresh/main/update-config.json';
 
 let mainWindow = null;
-
 let updateDownloaded = false;
-
 let isCheckingForUpdate = false;
-
 let isDownloadingUpdate = false;
 
-/*
-|--------------------------------------------------------------------------
-| Create Main Window
-|--------------------------------------------------------------------------
-*/
+let remoteUpdateConfig = null;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
-
     minWidth: 1000,
     minHeight: 700,
-
     show: false,
-
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,
-
-      preload: path.join(
-        __dirname,
-        'preload.js'
-      )
+      preload: path.join(__dirname, 'preload.js')
     }
   });
 
-  /*
-  |--------------------------------------------------------------------------
-  | Remove Default Electron Menu
-  |--------------------------------------------------------------------------
-  */
-
   Menu.setApplicationMenu(null);
 
-  /*
-  |--------------------------------------------------------------------------
-  | Load Vite Production Build
-  |--------------------------------------------------------------------------
-  */
-
-  const indexPath = path.join(
-    __dirname,
-    '..',
-    'dist',
-    'index.html'
-  );
+  const indexPath = path.join(__dirname, '..', 'dist', 'index.html');
 
   mainWindow.loadFile(indexPath);
 
-  /*
-  |--------------------------------------------------------------------------
-  | Open External HTTP/HTTPS Links in Windows Default Browser
-  |--------------------------------------------------------------------------
-  */
-
-  mainWindow.webContents.setWindowOpenHandler(
-    ({ url }) => {
-      if (
-        url.startsWith('http://') ||
-        url.startsWith('https://')
-      ) {
-        shell.openExternal(url);
-      }
-
-      return {
-        action: 'deny'
-      };
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      shell.openExternal(url);
     }
-  );
 
-  /*
-  |--------------------------------------------------------------------------
-  | Prevent External Navigation Inside Electron
-  |--------------------------------------------------------------------------
-  */
+    return { action: 'deny' };
+  });
 
-  mainWindow.webContents.on(
-    'will-navigate',
-    (event, url) => {
-      if (
-        url.startsWith('http://') ||
-        url.startsWith('https://')
-      ) {
-        event.preventDefault();
-
-        shell.openExternal(url);
-      }
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      event.preventDefault();
+      shell.openExternal(url);
     }
-  );
-
-  /*
-  |--------------------------------------------------------------------------
-  | Page Load Error
-  |--------------------------------------------------------------------------
-  */
+  });
 
   mainWindow.webContents.on(
     'did-fail-load',
-    (
-      _event,
-      errorCode,
-      errorDescription
-    ) => {
-      console.error(
-        'Electron failed to load application.'
-      );
-
-      console.error(
-        'Error Code:',
-        errorCode
-      );
-
-      console.error(
-        'Error:',
-        errorDescription
-      );
-
-      console.error(
-        'Path:',
-        indexPath
-      );
+    (_event, errorCode, errorDescription) => {
+      console.error('Electron failed to load application.');
+      console.error('Error Code:', errorCode);
+      console.error('Error:', errorDescription);
+      console.error('Path:', indexPath);
     }
   );
 
-  /*
-  |--------------------------------------------------------------------------
-  | Page Loaded
-  |--------------------------------------------------------------------------
-  */
+  mainWindow.webContents.on('did-finish-load', () => {
+    console.log('Sayonika PVC Utility loaded successfully.');
+  });
 
-  mainWindow.webContents.on(
-    'did-finish-load',
-    () => {
-      console.log(
-        'Sayonika PVC Utility loaded successfully.'
-      );
-    }
-  );
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.show();
+  });
 
-  /*
-  |--------------------------------------------------------------------------
-  | Show Window After Ready
-  |--------------------------------------------------------------------------
-  */
-
-  mainWindow.once(
-    'ready-to-show',
-    () => {
-      mainWindow.show();
-    }
-  );
-
-  /*
-  |--------------------------------------------------------------------------
-  | Window Closed
-  |--------------------------------------------------------------------------
-  */
-
-  mainWindow.on(
-    'closed',
-    () => {
-      mainWindow = null;
-    }
-  );
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
 }
 
-/*
-|--------------------------------------------------------------------------
-| Send Update Status to React
-|--------------------------------------------------------------------------
-*/
-
-function sendUpdateStatus(
-  status,
-  data = {}
-) {
-  if (
-    !mainWindow ||
-    mainWindow.isDestroyed()
-  ) {
+function sendUpdateStatus(status, data = {}) {
+  if (!mainWindow || mainWindow.isDestroyed()) {
     return;
   }
 
-  mainWindow.webContents.send(
-    'update-status',
-    {
-      status,
-      ...data
-    }
-  );
+  mainWindow.webContents.send('update-status', {
+    status,
+    ...data
+  });
 }
 
-/*
-|--------------------------------------------------------------------------
-| Configure Electron Auto Updater
-|--------------------------------------------------------------------------
-*/
-
-function configureAutoUpdater() {
-  /*
-  |--------------------------------------------------------------------------
-  | Important:
-  | We manually control download.
-  |--------------------------------------------------------------------------
-  */
-
-  autoUpdater.autoDownload = false;
-
-  autoUpdater.autoInstallOnAppQuit = true;
-
-  /*
-  |--------------------------------------------------------------------------
-  | Checking
-  |--------------------------------------------------------------------------
-  */
-
-  autoUpdater.on(
-    'checking-for-update',
-    () => {
-      console.log(
-        'Checking for application updates...'
-      );
-
-      sendUpdateStatus(
-        'checking'
-      );
-    }
-  );
-
-  /*
-  |--------------------------------------------------------------------------
-  | Update Available
-  |--------------------------------------------------------------------------
-  */
-
-  autoUpdater.on(
-    'update-available',
-    (info) => {
-      console.log(
-        'Update available:',
-        info.version
-      );
-
-      sendUpdateStatus(
-        'available',
-        {
-          version: info.version,
-
-          releaseDate:
-            info.releaseDate || null
-        }
-      );
-    }
-  );
-
-  /*
-  |--------------------------------------------------------------------------
-  | No Update Available
-  |--------------------------------------------------------------------------
-  */
-
-  autoUpdater.on(
-    'update-not-available',
-    (info) => {
-      console.log(
-        'Application is up to date.'
-      );
-
-      isCheckingForUpdate = false;
-
-      sendUpdateStatus(
-        'not-available',
-        {
-          version: info.version
-        }
-      );
-    }
-  );
-
-  /*
-  |--------------------------------------------------------------------------
-  | Download Progress
-  |--------------------------------------------------------------------------
-  */
-
-  autoUpdater.on(
-    'download-progress',
-    (progress) => {
-      isDownloadingUpdate = true;
-
-      console.log(
-        `Update download: ${progress.percent.toFixed(1)}%`
-      );
-
-      sendUpdateStatus(
-        'downloading',
-        {
-          percent:
-            progress.percent,
-
-          transferred:
-            progress.transferred,
-
-          total:
-            progress.total,
-
-          bytesPerSecond:
-            progress.bytesPerSecond
-        }
-      );
-    }
-  );
-
-  /*
-  |--------------------------------------------------------------------------
-  | Update Downloaded
-  |--------------------------------------------------------------------------
-  */
-
-  autoUpdater.on(
-    'update-downloaded',
-    (info) => {
-      isCheckingForUpdate = false;
-
-      isDownloadingUpdate = false;
-
-      updateDownloaded = true;
-
-      console.log(
-        'Update downloaded:',
-        info.version
-      );
-
-      sendUpdateStatus(
-        'downloaded',
-        {
-          version: info.version
-        }
-      );
-    }
-  );
-
-  /*
-  |--------------------------------------------------------------------------
-  | Updater Error
-  |--------------------------------------------------------------------------
-  */
-
-  autoUpdater.on(
-    'error',
-    (error) => {
-      isCheckingForUpdate = false;
-
-      isDownloadingUpdate = false;
-
-      console.error(
-        'Auto update error:',
-        error
-      );
-
-      sendUpdateStatus(
-        'error',
-        {
-          message:
-            error?.message ||
-            'Unknown update error'
-        }
-      );
-    }
-  );
+function normalizeVersion(version) {
+  return String(version || '')
+    .trim()
+    .replace(/^v/i, '');
 }
 
-/*
-|--------------------------------------------------------------------------
-| Check for Updates
-|--------------------------------------------------------------------------
-*/
+function compareVersions(versionA, versionB) {
+  const partsA = normalizeVersion(versionA)
+    .split('.')
+    .map((part) => Number.parseInt(part, 10) || 0);
 
-async function checkForUpdates() {
-  /*
-  |--------------------------------------------------------------------------
-  | Prevent Duplicate Checks
-  |--------------------------------------------------------------------------
-  */
+  const partsB = normalizeVersion(versionB)
+    .split('.')
+    .map((part) => Number.parseInt(part, 10) || 0);
 
-  if (isCheckingForUpdate) {
+  const length = Math.max(partsA.length, partsB.length);
+
+  for (let index = 0; index < length; index += 1) {
+    const numberA = partsA[index] || 0;
+    const numberB = partsB[index] || 0;
+
+    if (numberA > numberB) {
+      return 1;
+    }
+
+    if (numberA < numberB) {
+      return -1;
+    }
+  }
+
+  return 0;
+}
+
+async function loadRemoteUpdateConfig() {
+  try {
+    const response = await fetch(UPDATE_CONFIG_URL, {
+      headers: {
+        Accept: 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `Remote update config request failed with status ${response.status}.`
+      );
+    }
+
+    const config = await response.json();
+
+    if (!config || typeof config !== 'object') {
+      throw new Error('Remote update config has an invalid format.');
+    }
+
+    remoteUpdateConfig = {
+      latestVersion: String(config.latestVersion || ''),
+      minimumRequiredVersion: String(
+        config.minimumRequiredVersion || ''
+      ),
+      forceUpdate: config.forceUpdate === true,
+      updateMessage: String(
+        config.updateMessage ||
+          'Please update the application to continue.'
+      )
+    };
+
+    console.log('Remote update configuration loaded.');
+
+    return remoteUpdateConfig;
+  } catch (error) {
+    remoteUpdateConfig = null;
+
+    console.error(
+      'Failed to load remote update configuration:',
+      error?.message || error
+    );
+
+    return null;
+  }
+}
+
+async function getForceUpdateStatus() {
+  const installedVersion = app.getVersion();
+
+  const config =
+    remoteUpdateConfig || (await loadRemoteUpdateConfig());
+
+  if (!config) {
     return {
       success: false,
-
-      message:
-        'Update check already in progress.'
+      forceUpdateRequired: false,
+      installedVersion,
+      latestVersion: null,
+      minimumRequiredVersion: null,
+      forceUpdate: false,
+      updateMessage: '',
+      message: 'Remote update configuration could not be loaded.'
     };
   }
 
-  /*
-  |--------------------------------------------------------------------------
-  | Development Mode
-  |--------------------------------------------------------------------------
-  */
+  const minimumRequiredVersion =
+    config.minimumRequiredVersion || '0.0.0';
+
+  const installedVersionIsBelowMinimum =
+    compareVersions(installedVersion, minimumRequiredVersion) < 0;
+
+  const forceUpdateRequired =
+    config.forceUpdate === true &&
+    installedVersionIsBelowMinimum;
+
+  return {
+    success: true,
+    forceUpdateRequired,
+    installedVersion,
+    latestVersion: config.latestVersion || null,
+    minimumRequiredVersion,
+    forceUpdate: config.forceUpdate,
+    updateMessage: config.updateMessage,
+    message: forceUpdateRequired
+      ? 'A mandatory update is required.'
+      : 'Force update is not required.'
+  };
+}
+
+function configureAutoUpdater() {
+  autoUpdater.autoDownload = false;
+  autoUpdater.autoInstallOnAppQuit = true;
+
+  autoUpdater.on('checking-for-update', () => {
+    console.log('Checking for application updates...');
+
+    sendUpdateStatus('checking');
+  });
+
+  autoUpdater.on('update-available', (info) => {
+    console.log('Update available:', info.version);
+
+    sendUpdateStatus('available', {
+      version: info.version,
+      releaseDate: info.releaseDate || null
+    });
+  });
+
+  autoUpdater.on('update-not-available', (info) => {
+    console.log('Application is up to date.');
+
+    isCheckingForUpdate = false;
+
+    sendUpdateStatus('not-available', {
+      version: info.version
+    });
+  });
+
+  autoUpdater.on('download-progress', (progress) => {
+    isDownloadingUpdate = true;
+
+    console.log(
+      `Update download: ${progress.percent.toFixed(1)}%`
+    );
+
+    sendUpdateStatus('downloading', {
+      percent: progress.percent,
+      transferred: progress.transferred,
+      total: progress.total,
+      bytesPerSecond: progress.bytesPerSecond
+    });
+  });
+
+  autoUpdater.on('update-downloaded', (info) => {
+    isCheckingForUpdate = false;
+    isDownloadingUpdate = false;
+    updateDownloaded = true;
+
+    console.log('Update downloaded:', info.version);
+
+    sendUpdateStatus('downloaded', {
+      version: info.version
+    });
+  });
+
+  autoUpdater.on('error', (error) => {
+    isCheckingForUpdate = false;
+    isDownloadingUpdate = false;
+
+    console.error('Auto update error:', error);
+
+    sendUpdateStatus('error', {
+      message: error?.message || 'Unknown update error'
+    });
+  });
+}
+
+async function checkForUpdates() {
+  if (isCheckingForUpdate) {
+    return {
+      success: false,
+      message: 'Update check already in progress.'
+    };
+  }
 
   if (!app.isPackaged) {
     console.log(
       'Update check skipped because the application is running in development mode.'
     );
 
-    sendUpdateStatus(
-      'dev-mode'
-    );
+    sendUpdateStatus('dev-mode');
 
     return {
       success: false,
-
       message:
         'Updates are available only in the installed production application.'
     };
@@ -473,73 +321,39 @@ async function checkForUpdates() {
   } catch (error) {
     isCheckingForUpdate = false;
 
-    console.error(
-      'Failed to check for updates:',
-      error
-    );
+    console.error('Failed to check for updates:', error);
 
-    sendUpdateStatus(
-      'error',
-      {
-        message:
-          error?.message ||
-          'Failed to check for updates.'
-      }
-    );
+    sendUpdateStatus('error', {
+      message: error?.message || 'Failed to check for updates.'
+    });
 
     return {
       success: false,
-
-      message:
-        error?.message ||
-        'Failed to check for updates.'
+      message: error?.message || 'Failed to check for updates.'
     };
   }
 }
 
-/*
-|--------------------------------------------------------------------------
-| Download Update
-|--------------------------------------------------------------------------
-*/
-
 async function downloadUpdate() {
-  /*
-  |--------------------------------------------------------------------------
-  | Development Mode
-  |--------------------------------------------------------------------------
-  */
-
   if (!app.isPackaged) {
     return {
       success: false,
-
       message:
         'Updates are available only in the installed production application.'
     };
   }
 
-  /*
-  |--------------------------------------------------------------------------
-  | Prevent Duplicate Downloads
-  |--------------------------------------------------------------------------
-  */
-
   if (isDownloadingUpdate) {
     return {
       success: false,
-
-      message:
-        'Update download is already in progress.'
+      message: 'Update download is already in progress.'
     };
   }
 
   try {
     isDownloadingUpdate = true;
 
-    sendUpdateStatus(
-      'download-started'
-    );
+    sendUpdateStatus('download-started');
 
     await autoUpdater.downloadUpdate();
 
@@ -549,55 +363,31 @@ async function downloadUpdate() {
   } catch (error) {
     isDownloadingUpdate = false;
 
-    console.error(
-      'Failed to download update:',
-      error
-    );
+    console.error('Failed to download update:', error);
 
-    sendUpdateStatus(
-      'error',
-      {
-        message:
-          error?.message ||
-          'Failed to download update.'
-      }
-    );
+    sendUpdateStatus('error', {
+      message: error?.message || 'Failed to download update.'
+    });
 
     return {
       success: false,
-
-      message:
-        error?.message ||
-        'Failed to download update.'
+      message: error?.message || 'Failed to download update.'
     };
   }
 }
-
-/*
-|--------------------------------------------------------------------------
-| Install Downloaded Update
-|--------------------------------------------------------------------------
-*/
 
 function installUpdate() {
   if (!updateDownloaded) {
     return {
       success: false,
-
-      message:
-        'No downloaded update is available.'
+      message: 'No downloaded update is available.'
     };
   }
 
-  sendUpdateStatus(
-    'installing'
-  );
+  sendUpdateStatus('installing');
 
   setImmediate(() => {
-    autoUpdater.quitAndInstall(
-      false,
-      true
-    );
+    autoUpdater.quitAndInstall(false, true);
   });
 
   return {
@@ -605,129 +395,44 @@ function installUpdate() {
   };
 }
 
-/*
-|--------------------------------------------------------------------------
-| IPC Handlers
-|--------------------------------------------------------------------------
-*/
-
 function registerIPC() {
-  /*
-  |--------------------------------------------------------------------------
-  | Get Application Version
-  |--------------------------------------------------------------------------
-  */
+  ipcMain.handle('get-app-version', () => {
+    return app.getVersion();
+  });
 
-  ipcMain.handle(
-    'get-app-version',
-    () => {
-      return app.getVersion();
-    }
-  );
+  ipcMain.handle('get-force-update-status', async () => {
+    return await getForceUpdateStatus();
+  });
 
-  /*
-  |--------------------------------------------------------------------------
-  | Check for Updates
-  |--------------------------------------------------------------------------
-  */
+  ipcMain.handle('check-for-updates', async () => {
+    return await checkForUpdates();
+  });
 
-  ipcMain.handle(
-    'check-for-updates',
-    async () => {
-      return await checkForUpdates();
-    }
-  );
+  ipcMain.handle('download-update', async () => {
+    return await downloadUpdate();
+  });
 
-  /*
-  |--------------------------------------------------------------------------
-  | Download Update
-  |--------------------------------------------------------------------------
-  */
-
-  ipcMain.handle(
-    'download-update',
-    async () => {
-      return await downloadUpdate();
-    }
-  );
-
-  /*
-  |--------------------------------------------------------------------------
-  | Install Update
-  |--------------------------------------------------------------------------
-  */
-
-  ipcMain.handle(
-    'install-update',
-    () => {
-      return installUpdate();
-    }
-  );
+  ipcMain.handle('install-update', () => {
+    return installUpdate();
+  });
 }
 
-/*
-|--------------------------------------------------------------------------
-| Electron Ready
-|--------------------------------------------------------------------------
-*/
-
-app.whenReady().then(() => {
-  /*
-  |--------------------------------------------------------------------------
-  | Create Application Window
-  |--------------------------------------------------------------------------
-  */
+app.whenReady().then(async () => {
+  await loadRemoteUpdateConfig();
 
   createWindow();
-
-  /*
-  |--------------------------------------------------------------------------
-  | Configure Auto Updater
-  |--------------------------------------------------------------------------
-  */
-
   configureAutoUpdater();
-
-  /*
-  |--------------------------------------------------------------------------
-  | Register IPC
-  |--------------------------------------------------------------------------
-  */
-
   registerIPC();
 
-  /*
-  |--------------------------------------------------------------------------
-  | macOS Activate
-  |--------------------------------------------------------------------------
-  */
-
-  app.on(
-    'activate',
-    () => {
-      if (
-        BrowserWindow.getAllWindows()
-          .length === 0
-      ) {
-        createWindow();
-      }
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
     }
-  );
+  });
 });
 
-/*
-|--------------------------------------------------------------------------
-| Close Application
-|--------------------------------------------------------------------------
-*/
-
-app.on(
-  'window-all-closed',
-  () => {
-    if (
-      process.platform !== 'darwin'
-    ) {
-      app.quit();
-    }
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit();
   }
-);
+});
