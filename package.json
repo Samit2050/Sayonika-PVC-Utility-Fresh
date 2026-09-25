@@ -3,7 +3,7 @@
   "name": "sayonika-pvc-utility",
   "productName": "Sayonika PVC Utility",
   "private": true,
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Sayonika PVC Utility - PDF to PVC Card Auto-Crop & Batch Studio",
   "type": "module",
   "main": "electron/main.js",
