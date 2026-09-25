@@ -6,10 +6,6 @@ const electronAPI = {
     return ipcRenderer.invoke('get-app-version');
   },
 
-  getForceUpdateStatus: () => {
-    return ipcRenderer.invoke('get-force-update-status');
-  },
-
   checkForUpdates: () => {
     return ipcRenderer.invoke('check-for-updates');
   },
@@ -20,6 +16,17 @@ const electronAPI = {
 
   installUpdate: () => {
     return ipcRenderer.invoke('install-update');
+  },
+
+  saveFileToCroppedFolder: (fileName, data) => {
+    return ipcRenderer.invoke('save-file-to-cropped-folder', {
+      fileName,
+      data
+    });
+  },
+
+  openCroppedFolder: () => {
+    return ipcRenderer.invoke('open-cropped-folder');
   },
 
   onUpdateStatus: (callback) => {
