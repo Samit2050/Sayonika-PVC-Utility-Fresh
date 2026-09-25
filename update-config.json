@@ -1,6 +1,6 @@
 {
   "latestVersion": "1.0.3",
-  "minimumRequiredVersion": "1.0.4",
-  "forceUpdate": true,
-  "updateMessage": "A mandatory update is required. Please update to continue using Sayonika PVC Utility."
+  "minimumRequiredVersion": "1.0.0",
+  "forceUpdate": false,
+  "updateMessage": "A new version of Sayonika PVC Utility is available. Please update to continue using the application."
 }
