@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 
 interface UpdateStatus {
@@ -11,6 +12,17 @@ interface UpdateStatus {
   message?: string;
 }
 
+interface ForceUpdateStatus {
+  success: boolean;
+  forceUpdateRequired: boolean;
+  installedVersion: string;
+  latestVersion: string | null;
+  minimumRequiredVersion: string | null;
+  forceUpdate: boolean;
+  updateMessage: string;
+  message: string;
+}
+
 export const ElectronUpdateManager: React.FC = () => {
   const [appVersion, setAppVersion] = useState<string>('');
   const [status, setStatus] = useState<string>('idle');
@@ -18,6 +30,15 @@ export const ElectronUpdateManager: React.FC = () => {
   const [downloadPercent, setDownloadPercent] = useState<number>(0);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [isOpen, setIsOpen] = useState<boolean>(false);
+
+  const [forceUpdateRequired, setForceUpdateRequired] =
+    useState<boolean>(false);
+
+  const [forceUpdateMessage, setForceUpdateMessage] =
+    useState<string>('');
+
+  const [minimumRequiredVersion, setMinimumRequiredVersion] =
+    useState<string>('');
 
   const autoCloseTimerRef = useRef<number | null>(null);
 
@@ -33,6 +54,10 @@ export const ElectronUpdateManager: React.FC = () => {
   };
 
   const closePopup = () => {
+    if (forceUpdateRequired) {
+      return;
+    }
+
     clearAutoCloseTimer();
     setIsOpen(false);
     setStatus('idle');
@@ -41,6 +66,10 @@ export const ElectronUpdateManager: React.FC = () => {
   };
 
   const startAutoCloseTimer = () => {
+    if (forceUpdateRequired) {
+      return;
+    }
+
     clearAutoCloseTimer();
 
     autoCloseTimerRef.current = window.setTimeout(() => {
@@ -52,6 +81,43 @@ export const ElectronUpdateManager: React.FC = () => {
     }, 5000);
   };
 
+  const loadForceUpdateStatus = async () => {
+    try {
+      const result: ForceUpdateStatus =
+        await window.electronAPI.getForceUpdateStatus();
+
+      if (!result.success) {
+        console.warn(
+          'Force update status could not be loaded:',
+          result.message
+        );
+        return;
+      }
+
+      setForceUpdateRequired(result.forceUpdateRequired);
+
+      setForceUpdateMessage(
+        result.updateMessage ||
+          'A mandatory update is required. Please update the application to continue.'
+      );
+
+      setMinimumRequiredVersion(
+        result.minimumRequiredVersion || ''
+      );
+
+      if (result.forceUpdateRequired) {
+        clearAutoCloseTimer();
+        setIsOpen(true);
+        setErrorMessage('');
+      }
+    } catch (error) {
+      console.error(
+        'Failed to load force update status:',
+        error
+      );
+    }
+  };
+
   useEffect(() => {
     if (!isElectron) {
       return;
@@ -61,11 +127,18 @@ export const ElectronUpdateManager: React.FC = () => {
 
     const initialize = async () => {
       try {
-        const version = await window.electronAPI.getAppVersion();
+        const version =
+          await window.electronAPI.getAppVersion();
+
         setAppVersion(version);
       } catch (error) {
-        console.error('Failed to get application version:', error);
+        console.error(
+          'Failed to get application version:',
+          error
+        );
       }
+
+      await loadForceUpdateStatus();
 
       cleanup = window.electronAPI.onUpdateStatus(
         (data: UpdateStatus) => {
@@ -87,11 +160,6 @@ export const ElectronUpdateManager: React.FC = () => {
             setErrorMessage('');
           }
 
-          /*
-           * When GitHub confirms that the installed version
-           * is already the latest version, automatically close
-           * the update popup after 5 seconds.
-           */
           if (data.status === 'not-available') {
             startAutoCloseTimer();
           } else {
@@ -209,8 +277,11 @@ export const ElectronUpdateManager: React.FC = () => {
     }
   };
 
-  const showDownloadButton = status === 'available';
-  const showInstallButton = status === 'downloaded';
+  const showDownloadButton =
+    status === 'available';
+
+  const showInstallButton =
+    status === 'downloaded';
 
   const isBusy =
     status === 'checking' ||
@@ -230,12 +301,16 @@ export const ElectronUpdateManager: React.FC = () => {
       </button>
 
       {isOpen && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm">
-          <div className="w-[420px] max-w-[calc(100vw-32px)] rounded-2xl border border-slate-700 bg-slate-900 text-slate-100 shadow-2xl">
-
+        <div
+          className={`fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm ${
+            forceUpdateRequired
+              ? 'cursor-not-allowed'
+              : ''
+          }`}
+        >
+          <div className="w-[440px] max-w-[calc(100vw-32px)] rounded-2xl border border-slate-700 bg-slate-900 text-slate-100 shadow-2xl">
             <div className="px-5 py-4 border-b border-slate-700">
               <div className="flex items-center justify-between">
-
                 <div>
                   <h2 className="text-lg font-bold">
                     Sayonika PVC Utility
@@ -246,21 +321,45 @@ export const ElectronUpdateManager: React.FC = () => {
                   </p>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={closePopup}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 text-xl transition"
-                  title="Close"
-                >
-                  ×
-                </button>
-
+                {!forceUpdateRequired && (
+                  <button
+                    type="button"
+                    onClick={closePopup}
+                    className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 text-xl transition"
+                    title="Close"
+                  >
+                    ×
+                  </button>
+                )}
               </div>
             </div>
 
             <div className="p-5">
+              {forceUpdateRequired && (
+                <div className="rounded-lg bg-amber-950/60 border border-amber-700 p-4 mb-4">
+                  <p className="font-semibold text-amber-300">
+                    Mandatory Update Required
+                  </p>
 
-              {status === 'idle' && (
+                  <p className="text-sm text-amber-100 mt-2">
+                    {forceUpdateMessage}
+                  </p>
+
+                  {minimumRequiredVersion && (
+                    <p className="text-xs text-amber-200 mt-2">
+                      Minimum Required Version: v
+                      {minimumRequiredVersion}
+                    </p>
+                  )}
+
+                  <p className="text-xs text-amber-300 mt-3">
+                    Please download and install the update
+                    to continue using the application.
+                  </p>
+                </div>
+              )}
+
+              {status === 'idle' && !forceUpdateRequired && (
                 <p className="text-sm text-slate-300">
                   Check GitHub for the latest version of the application.
                 </p>
@@ -305,7 +404,7 @@ export const ElectronUpdateManager: React.FC = () => {
               {status === 'downloaded' && (
                 <div className="rounded-lg bg-emerald-950/60 border border-emerald-800 p-4">
                   <p className="font-semibold text-emerald-300">
-                    Update ready
+                    Update Ready
                   </p>
 
                   <p className="text-sm text-slate-300 mt-1">
@@ -324,9 +423,11 @@ export const ElectronUpdateManager: React.FC = () => {
                     Current version: v{appVersion}
                   </p>
 
-                  <p className="text-xs text-slate-500 mt-2">
-                    This window will close automatically in 5 seconds.
-                  </p>
+                  {!forceUpdateRequired && (
+                    <p className="text-xs text-slate-500 mt-2">
+                      This window will close automatically in 5 seconds.
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -344,27 +445,25 @@ export const ElectronUpdateManager: React.FC = () => {
 
               {isBusy && status !== 'downloading' && (
                 <div className="flex items-center gap-3 mt-4 text-sm text-slate-300">
-
                   <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
 
                   <span>
                     {getStatusText()}
                   </span>
-
                 </div>
               )}
 
               {!isBusy &&
                 status !== 'idle' &&
                 status !== 'downloading' &&
-                status !== 'not-available' && (
+                status !== 'not-available' &&
+                status !== 'error' && (
                   <p className="text-sm text-slate-300 mt-4">
                     {getStatusText()}
                   </p>
                 )}
 
               <div className="flex justify-end gap-2 mt-6">
-
                 {showDownloadButton && (
                   <button
                     type="button"
@@ -398,7 +497,6 @@ export const ElectronUpdateManager: React.FC = () => {
                       Check for Updates
                     </button>
                   )}
-
               </div>
             </div>
           </div>
