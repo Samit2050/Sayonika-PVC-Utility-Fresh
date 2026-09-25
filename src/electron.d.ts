@@ -20,21 +20,19 @@ interface UpdateInfo {
   message?: string;
 }
 
-interface ForceUpdateStatus {
+interface SaveFileResult {
   success: boolean;
-  forceUpdateRequired: boolean;
-  installedVersion: string;
-  latestVersion: string | null;
-  minimumRequiredVersion: string | null;
-  forceUpdate: boolean;
-  updateMessage: string;
-  message: string;
+  filePath?: string;
+  message?: string;
+}
+
+interface OpenFolderResult {
+  success: boolean;
+  message?: string;
 }
 
 interface ElectronAPI {
   getAppVersion: () => Promise<string>;
-
-  getForceUpdateStatus: () => Promise<ForceUpdateStatus>;
 
   checkForUpdates: () => Promise<{
     success: boolean;
@@ -50,6 +48,13 @@ interface ElectronAPI {
     success: boolean;
     message?: string;
   }>;
+
+  saveFileToCroppedFolder: (
+    fileName: string,
+    data: Uint8Array | number[] | ArrayBuffer
+  ) => Promise<SaveFileResult>;
+
+  openCroppedFolder: () => Promise<OpenFolderResult>;
 
   onUpdateStatus: (
     callback: (data: UpdateInfo) => void
