@@ -1,0 +1,106 @@
+{
+  "entities": {
+    "User": {
+      "title": "Authorized User",
+      "description": "Authorized user account with login credentials, roles, and real-time single-session tracking token.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Unique username or ID used to login (case-insensitive key)"
+        },
+        "name": {
+          "type": "string",
+          "description": "User display name / shop operator name"
+        },
+        "password": {
+          "type": "string",
+          "description": "Plaintext/hashed password for operator authentication"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["admin", "operator", "user"],
+          "description": "Access level of the user (admin can manage other user logins, operator can use app)"
+        },
+        "isAllowed": {
+          "type": "boolean",
+          "description": "Admin allow/deny filter toggle. If false, user cannot login."
+        },
+        "activeSessionToken": {
+          "type": "string",
+          "description": "Unique UUID/token for current active login session. Changes on each login to force terminate simultaneous logins."
+        },
+        "boundHardwareId": {
+          "type": "string",
+          "description": "Bound PC MAC Address, CPU ID, or Hardware Identifier for PC-locking registration"
+        },
+        "isPcBindingEnabled": {
+          "type": "boolean",
+          "description": "Whether PC-binding lock is strictly enforced for this operator"
+        },
+        "boundHardwareLabel": {
+          "type": "string",
+          "description": "Optional friendly label for bound machine (e.g. Counter 1 Desktop)"
+        },
+        "boundAt": {
+          "type": "number",
+          "description": "Timestamp when account was bound to the PC MAC/hardware ID"
+        },
+        "lastSeenHardwareId": {
+          "type": "string",
+          "description": "Last detected hardware MAC / device ID on login attempt"
+        },
+        "lastLoginAt": {
+          "type": "number",
+          "description": "Unix timestamp in ms of last successful login"
+        },
+        "lastActiveAt": {
+          "type": "number",
+          "description": "Unix timestamp in ms of recent heartbeat ping"
+        },
+        "lastLoginIp": {
+          "type": "string",
+          "description": "Optional device/user agent note"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Admin notes about operator or machine"
+        },
+        "createdAt": {
+          "type": "number",
+          "description": "Timestamp when user was created"
+        }
+      },
+      "required": ["userId", "password", "isAllowed", "role"]
+    },
+    "SecurityConfig": {
+      "title": "Security Configuration",
+      "description": "Global security settings like require login, strict single-session enforcement, etc.",
+      "type": "object",
+      "properties": {
+        "requireLogin": {
+          "type": "boolean",
+          "description": "Whether authentication is strictly enforced to use the app"
+        },
+        "allowSelfRegistration": {
+          "type": "boolean",
+          "description": "Whether users can request access (pending admin approval)"
+        },
+        "adminEmail": {
+          "type": "string",
+          "description": "Primary administrator identifier/email"
+        }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "entity": "User",
+      "description": "Collection of authorized users keyed by normalized lowercased userId."
+    },
+    "/system_config/{configId}": {
+      "entity": "SecurityConfig",
+      "description": "System security preferences and global toggles."
+    }
+  }
+}

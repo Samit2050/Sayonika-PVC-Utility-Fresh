@@ -1,0 +1,258 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  }
+  
+  code, kbd, samp, pre {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+}
+
+/* Browser-style Standard Scrollbar */
+* {
+  scrollbar-width: auto;
+  scrollbar-color: #475569 #0f172a;
+}
+
+/* Webkit browser scrollbar styling */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0f172a;
+  border-left: 1px solid rgba(51, 65, 85, 0.4);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #475569;
+  border-radius: 6px;
+  border: 2.5px solid #0f172a;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #64748b;
+}
+
+::-webkit-scrollbar-thumb:active {
+  background-color: #94a3b8;
+}
+
+::-webkit-scrollbar-corner {
+  background: #0f172a;
+}
+
+/* Custom scrollbar class mirroring browser styling */
+.custom-scrollbar {
+  scrollbar-width: auto;
+  scrollbar-color: #475569 #0f172a;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #0f172a;
+  border-left: 1px solid rgba(51, 65, 85, 0.4);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #475569;
+  border-radius: 6px;
+  border: 2.5px solid #0f172a;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #64748b;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:active {
+  background-color: #94a3b8;
+}
+
+/* Blueprint dot matrix background pattern for canvas stage */
+.blueprint-dot-bg {
+  background-color: #090d16;
+  background-image: radial-gradient(rgba(148, 163, 184, 0.12) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* RGB Glow Animations & Keyframes */
+@keyframes rgb-shift-gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes rgb-box-pulse {
+  0%, 100% {
+    box-shadow: 0 0 12px 1px rgba(236, 72, 153, 0.6), 0 0 24px 3px rgba(59, 130, 246, 0.4), inset 0 0 6px rgba(255, 255, 255, 0.3);
+    filter: drop-shadow(0 0 8px rgba(168, 85, 247, 0.7));
+  }
+  33% {
+    box-shadow: 0 0 14px 2px rgba(16, 185, 129, 0.7), 0 0 26px 4px rgba(245, 158, 11, 0.5), inset 0 0 6px rgba(255, 255, 255, 0.4);
+    filter: drop-shadow(0 0 9px rgba(34, 197, 94, 0.8));
+  }
+  66% {
+    box-shadow: 0 0 15px 2px rgba(99, 102, 241, 0.7), 0 0 28px 4px rgba(236, 72, 153, 0.6), inset 0 0 6px rgba(255, 255, 255, 0.3);
+    filter: drop-shadow(0 0 10px rgba(6, 182, 212, 0.8));
+  }
+}
+
+@keyframes rgb-conic-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.rgb-glow-active {
+  background-size: 300% 300% !important;
+  background-image: linear-gradient(115deg, #ff0077, #7928ca, #0070f3, #00dfd8, #00ff88, #ffbf00, #ff0077) !important;
+  animation: rgb-shift-gradient 3.5s ease infinite, rgb-box-pulse 3s ease-in-out infinite !important;
+  border-color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.rgb-glow-cyberpunk {
+  background-size: 300% 300% !important;
+  background-image: linear-gradient(115deg, #f43f5e, #8b5cf6, #06b6d4, #10b981, #f59e0b, #f43f5e) !important;
+  animation: rgb-shift-gradient 2.5s ease infinite, rgb-box-pulse 2.5s ease-in-out infinite !important;
+  border-color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.rgb-glow-neon-emerald {
+  background-size: 300% 300% !important;
+  background-image: linear-gradient(115deg, #059669, #10b981, #06b6d4, #3b82f6, #10b981, #059669) !important;
+  animation: rgb-shift-gradient 3s ease infinite, rgb-box-pulse 3s ease-in-out infinite !important;
+  border-color: rgba(167, 243, 208, 0.8) !important;
+}
+
+.rgb-glow-fire {
+  background-size: 300% 300% !important;
+  background-image: linear-gradient(115deg, #dc2626, #ea580c, #f59e0b, #e11d48, #ea580c, #dc2626) !important;
+  animation: rgb-shift-gradient 2.8s ease infinite, rgb-box-pulse 2.8s ease-in-out infinite !important;
+  border-color: rgba(254, 215, 170, 0.8) !important;
+}
+
+.rgb-glow-container-halo {
+  position: relative;
+}
+
+.rgb-glow-container-halo::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 12px;
+  background: conic-gradient(from 0deg, #ff0077, #7928ca, #0070f3, #00dfd8, #00ff88, #ffbf00, #ff0077);
+  filter: blur(6px);
+  opacity: 0.85;
+  z-index: 0;
+  animation: rgb-conic-spin 4s linear infinite;
+}
+
+/* News Ticker Marquee Scroll Keyframes & Styles */
+@keyframes ticker-marquee-scroll {
+  0% {
+    transform: translate3d(0%, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-marquee-scroll {
+  display: inline-flex;
+  white-space: nowrap;
+  animation: ticker-marquee-scroll var(--ticker-duration, 35s) linear infinite;
+  will-change: transform;
+}
+
+.pause-on-hover:hover .animate-marquee-scroll {
+  animation-play-state: paused !important;
+}
+
+/* Ticker Visual Effects */
+.ticker-effect-neon-pulse {
+  text-shadow: 0 0 6px rgba(56, 189, 248, 0.7), 0 0 14px rgba(59, 130, 246, 0.5);
+}
+
+.ticker-effect-rgb-glow {
+  background: linear-gradient(90deg, #ff0077, #7928ca, #0070f3, #00dfd8, #00ff88, #ffbf00, #ff0077);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: rgb-shift-gradient 4s ease infinite;
+}
+
+.ticker-effect-cyberpunk {
+  background: linear-gradient(90deg, #f43f5e, #a855f7, #06b6d4, #f59e0b, #f43f5e);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: rgb-shift-gradient 3s ease infinite;
+  text-shadow: 0 0 8px rgba(244, 63, 94, 0.4);
+}
+
+.ticker-effect-gold-fire {
+  background: linear-gradient(90deg, #fbbf24, #f97316, #ef4444, #fbbf24);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: rgb-shift-gradient 3.2s ease infinite;
+}
+
+.ticker-effect-subtle {
+  letter-spacing: 0.02em;
+}
+
+.ticker-effect-smooth-marquee {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+/* Print CSS Media Queries for Exact Millimeter Imposition Printing */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  #app-header,
+  #sidebar-controls,
+  #canvas-viewport,
+  button,
+  nav,
+  aside {
+    display: none !important;
+  }
+
+  #printable-paper-sheet {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  @page {
+    margin: 6mm;
+    size: auto;
+  }
+}

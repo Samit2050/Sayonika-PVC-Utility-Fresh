@@ -1,0 +1,6 @@
+{
+  "name": "Sayonika PVC Utility",
+  "description": "High-precision PDF to PVC card auto-crop and batch processing utility with Epson L8050/L18050 PVC tray direct borderless printing, cloud-synced custom templates, and 600 DPI Ultra HD output.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

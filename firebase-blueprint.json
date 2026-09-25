@@ -1,0 +1,234 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Authorized user account with role-based access and single-session tracking",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 200 },
+        "password": { "type": "string", "maxLength": 200 },
+        "role": { "type": "string", "enum": ["admin", "operator", "user"] },
+        "isAllowed": { "type": "boolean" },
+        "isApproved": { "type": "boolean" },
+        "subscriptionType": { "type": "string", "enum": ["days", "lifetime", "none", "trial"] },
+        "subscriptionDays": { "type": "number" },
+        "subscriptionExpiresAt": { "type": "number" },
+        "mobileNumber": { "type": "string", "maxLength": 30 },
+        "activeSessionToken": { "type": "string", "maxLength": 128 },
+        "boundHardwareId": { "type": "string", "maxLength": 128 },
+        "isPcBindingEnabled": { "type": "boolean" },
+        "boundHardwareLabel": { "type": "string", "maxLength": 256 },
+        "boundAt": { "type": "number" },
+        "lastSeenHardwareId": { "type": "string", "maxLength": 128 },
+        "lastLoginAt": { "type": "number" },
+        "lastActiveAt": { "type": "number" },
+        "lastLoginDevice": { "type": "string", "maxLength": 256 },
+        "notes": { "type": "string", "maxLength": 1000 },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["userId", "name", "role", "isAllowed"]
+    },
+    "SharedPreset": {
+      "title": "SharedPreset",
+      "description": "Global custom crop presets created, uploaded or managed by admin/master admin for all shop users",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 200 },
+        "category": { "type": "string", "maxLength": 50 },
+        "description": { "type": "string", "maxLength": 1000 },
+        "dualSided": { "type": "boolean" },
+        "frontBox": { "type": "object" },
+        "backBox": { "type": "object" },
+        "frontPage": { "type": "number" },
+        "backPage": { "type": "number" },
+        "matchKeywords": { "type": "string", "maxLength": 1000 },
+        "suggestedPasswordFormat": { "type": "string", "maxLength": 500 },
+        "instructions": { "type": "string", "maxLength": 1000 },
+        "marginSettings": { "type": "object" },
+        "imageAdjustments": { "type": "object" },
+        "createdBy": { "type": "string", "maxLength": 200 },
+        "createdByRole": { "type": "string", "maxLength": 50 },
+        "isGlobal": { "type": "boolean" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["id", "name", "category", "dualSided", "frontBox"]
+    },
+    "SystemConfig": {
+      "title": "SystemConfig",
+      "description": "Global shop configuration, security settings, public access toggle, and customizable pop-up messages",
+      "type": "object",
+      "properties": {
+        "shopName": { "type": "string", "maxLength": 200 },
+        "contactEmail": { "type": "string", "maxLength": 200 },
+        "publicAccessEnabled": { "type": "boolean" },
+        "isLoginRequired": { "type": "boolean" },
+        "telegramLink": { "type": "string", "maxLength": 500 },
+        "telegramButtonText": { "type": "string", "maxLength": 100 },
+        "telegramUsername": { "type": "string", "maxLength": 100 },
+        "adminContactMessage": { "type": "string", "maxLength": 2000 },
+        "adminContactPhone": { "type": "string", "maxLength": 50 },
+        "updatedBy": { "type": "string", "maxLength": 200 },
+        "updatedAt": { "type": "number" }
+      }
+    },
+    "AppUpdateConfig": {
+      "title": "AppUpdateConfig",
+      "description": "Live customizable download and update link for the PC app installer with RGB glow effects, managed by Admin/Developer and synced via Firestore",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "url": { "type": "string", "maxLength": 2000 },
+        "buttonLabel": { "type": "string", "maxLength": 100 },
+        "badgeText": { "type": "string", "maxLength": 50 },
+        "tooltipText": { "type": "string", "maxLength": 500 },
+        "isEnabled": { "type": "boolean" },
+        "versionTag": { "type": "string", "maxLength": 50 },
+        "rgbGlowEnabled": { "type": "boolean" },
+        "rgbGlowStyle": { "type": "string", "enum": ["rainbow", "cyberpunk", "neon-emerald", "fire"] },
+        "rgbGlowHalo": { "type": "boolean" },
+        "updatedBy": { "type": "string", "maxLength": 200 },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["id", "url", "buttonLabel"]
+    },
+    "BroadcastPopup": {
+      "title": "BroadcastPopup",
+      "description": "Customizable global announcement and pop-up message box configured by Admin",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "isEnabled": { "type": "boolean" },
+        "title": { "type": "string", "maxLength": 200 },
+        "subtitle": { "type": "string", "maxLength": 300 },
+        "message": { "type": "string", "maxLength": 3000 },
+        "bengaliMessage": { "type": "string", "maxLength": 3000 },
+        "theme": { "type": "string", "enum": ["sunset", "emerald", "navy", "crimson", "purple", "dark"] },
+        "badgeText": { "type": "string", "maxLength": 50 },
+        "showDownloadButton": { "type": "boolean" },
+        "downloadButtonLabel": { "type": "string", "maxLength": 100 },
+        "downloadUrl": { "type": "string", "maxLength": 1000 },
+        "showTelegramButton": { "type": "boolean" },
+        "telegramHandle": { "type": "string", "maxLength": 100 },
+        "telegramUrl": { "type": "string", "maxLength": 1000 },
+        "showFacebookButton": { "type": "boolean" },
+        "facebookUrl": { "type": "string", "maxLength": 1000 },
+        "customButtonLabel": { "type": "string", "maxLength": 100 },
+        "customButtonUrl": { "type": "string", "maxLength": 1000 },
+        "showCustomButton": { "type": "boolean" },
+        "footerNote": { "type": "string", "maxLength": 500 },
+        "version": { "type": "number" },
+        "updatedBy": { "type": "string", "maxLength": 200 },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["id", "isEnabled", "title", "message"]
+    },
+    "OnlinePresence": {
+      "title": "OnlinePresence",
+      "description": "Real-time active user presence session heartbeat",
+      "type": "object",
+      "properties": {
+        "sessionId": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "userName": { "type": "string", "maxLength": 200 },
+        "role": { "type": "string", "maxLength": 50 },
+        "device": { "type": "string", "maxLength": 256 },
+        "joinedAt": { "type": "number" },
+        "lastPing": { "type": "number" }
+      },
+      "required": ["sessionId", "joinedAt", "lastPing"]
+    },
+    "SystemStats": {
+      "title": "SystemStats",
+      "description": "Global application usage statistics including total visits",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "totalVisits": { "type": "number" },
+        "updatedAt": { "type": "number" },
+        "lastVisitAt": { "type": "number" }
+      },
+      "required": ["id", "totalVisits"]
+    },
+    "SubscriptionPaymentRequest": {
+      "title": "SubscriptionPaymentRequest",
+      "description": "Instant payment subscription requests submitted with UPI UTR reference number and verified by admin",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "userName": { "type": "string", "maxLength": 200 },
+        "userMobile": { "type": "string", "maxLength": 30 },
+        "planId": { "type": "string", "maxLength": 100 },
+        "planName": { "type": "string", "maxLength": 200 },
+        "planDays": { "type": "number" },
+        "amountPaid": { "type": "number" },
+        "utrNumber": { "type": "string", "maxLength": 64 },
+        "paymentApp": { "type": "string", "maxLength": 50 },
+        "notes": { "type": "string", "maxLength": 1000 },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "rejectionReason": { "type": "string", "maxLength": 1000 },
+        "createdAt": { "type": "number" },
+        "reviewedAt": { "type": "number" },
+        "reviewedBy": { "type": "string", "maxLength": 200 },
+        "grantedDays": { "type": "number" },
+        "grantedExpiresAt": { "type": "number" }
+      },
+      "required": ["id", "userId", "planId", "planName", "amountPaid", "utrNumber", "status", "createdAt"]
+    },
+    "UserMessage": {
+      "title": "UserMessage",
+      "description": "Direct message, inquiry, custom card request, or support ticket sent by app users to the administrator",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "userName": { "type": "string", "maxLength": 200 },
+        "userMobile": { "type": "string", "maxLength": 30 },
+        "category": { "type": "string", "maxLength": 100 },
+        "subject": { "type": "string", "maxLength": 250 },
+        "message": { "type": "string", "maxLength": 4000 },
+        "hardwareId": { "type": "string", "maxLength": 128 },
+        "status": { "type": "string", "enum": ["unread", "read", "replied", "resolved"] },
+        "adminReply": { "type": "string", "maxLength": 4000 },
+        "repliedBy": { "type": "string", "maxLength": 200 },
+        "repliedAt": { "type": "number" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["id", "userName", "message", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Authorized user accounts managed by Admin"
+    },
+    "/shared_presets/{presetId}": {
+      "schema": "SharedPreset",
+      "description": "Admin created or uploaded custom presets accessible to all users"
+    },
+    "/system_config/{configId}": {
+      "schema": "SystemConfig",
+      "description": "System-wide settings"
+    },
+    "/online_presence/{sessionId}": {
+      "schema": "OnlinePresence",
+      "description": "Active session presence beacons"
+    },
+    "/system_stats/{statId}": {
+      "schema": "SystemStats",
+      "description": "Global usage counters and metrics"
+    },
+    "/subscription_requests/{requestId}": {
+      "schema": "SubscriptionPaymentRequest",
+      "description": "UPI QR and UTR payment subscription requests"
+    },
+    "/user_messages/{messageId}": {
+      "schema": "UserMessage",
+      "description": "Inquiries, support tickets, and direct feedback sent by app users to the admin"
+    }
+  }
+}
