@@ -1,3 +1,4 @@
+
 interface UpdateInfo {
   status:
     | 'checking'
@@ -19,8 +20,21 @@ interface UpdateInfo {
   message?: string;
 }
 
+interface ForceUpdateStatus {
+  success: boolean;
+  forceUpdateRequired: boolean;
+  installedVersion: string;
+  latestVersion: string | null;
+  minimumRequiredVersion: string | null;
+  forceUpdate: boolean;
+  updateMessage: string;
+  message: string;
+}
+
 interface ElectronAPI {
   getAppVersion: () => Promise<string>;
+
+  getForceUpdateStatus: () => Promise<ForceUpdateStatus>;
 
   checkForUpdates: () => Promise<{
     success: boolean;
